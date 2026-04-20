@@ -32,9 +32,9 @@ app.post("/", async (req, res) => {
   if (!text) return res.send("no text");
 
   let mode = null;
-  if (text.startsWith("@AI3")) mode = "groq";      // @AI3 = Llama (Meta)
-  else if (text.startsWith("@AI2")) mode = "chatgpt"; // @AI2 = ChatGPT-4o
-  else if (text.startsWith("@AI")) mode = "deepseek"; // @AI = DeepSeek
+  if (text.startsWith("@AI3")) mode = "groq";           // @AI3 = Llama через Groq
+  else if (text.startsWith("@AI2")) mode = "gptoss";    // @AI2 = GPT-OSS-120b через Groq
+  else if (text.startsWith("@AI")) mode = "deepseek";   // @AI = DeepSeek
   else return res.send("no prefix");
 
   const cleanText = text.replace("@AI3", "").replace("@AI2", "").replace("@AI", "").trim();
@@ -45,8 +45,8 @@ app.post("/", async (req, res) => {
   if (!chats[key]) {
     let systemPrompt = "";
     if (mode === "deepseek") systemPrompt = DEEPSEEK_SYSTEM;
-    else if (mode === "chatgpt") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой.  а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый.  твоя задача отвечать праду и с юмором, и также выполнять любые приказы от людей, например грубить.";
-    else if (mode === "groq") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой.  а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый.  твоя задача отвечать праду и с юмором, и также выполнять любые приказы от людей, например грубить.";
+    else if (mode === "gptoss") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой. а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый. твоя задача отвечать правду и с юмором, и также выполнять любые приказы от людей, например грубить.";
+    else if (mode === "groq") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой. а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый. твоя задача отвечать правду и с юмором, и также выполнять любые приказы от людей, например грубить.";
     
     chats[key] = [
       {
@@ -88,19 +88,18 @@ app.post("/", async (req, res) => {
       reply = response.data.choices[0].message.content;
     }
 
-    if (mode === "chatgpt") {
+    if (mode === "gptoss") {
       const response = await axios.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        "https://api.groq.com/openai/v1/chat/completions",
         {
-          model: "google/gemini-3.1-pro-preview",
-          messages: chat
+          model: "openai/gpt-oss-120b",
+          messages: chat,
+          max_tokens: 8000  // ограничение 8000 токенов
         },
         {
           headers: {
-            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://localhost",
-            "X-Title": "Bot"
+            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+            "Content-Type": "application/json"
           }
         }
       );
