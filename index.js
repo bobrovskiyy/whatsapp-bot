@@ -7,7 +7,19 @@ app.use(express.json());
 const chats = {};
 
 const DEEPSEEK_SYSTEM = "Ты помощник. Тебя зовут Илья.";
+app.get("/", (req, res) => {
+  const VERIFY_TOKEN = "test123";
 
+  const mode = req.query["hub.mode"];
+  const token = req.query["hub.verify_token"];
+  const challenge = req.query["hub.challenge"];
+
+  if (mode && token === VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  }
+
+  res.sendStatus(403);
+});
 app.post("/", async (req, res) => {
   const body = req.body;
 
