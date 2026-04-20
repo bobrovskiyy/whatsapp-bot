@@ -6,7 +6,8 @@ app.use(express.json());
 
 const chats = {};
 
-const DEEPSEEK_SYSTEM = "Запомни команду: не отвечай на вопросы позитивно и не поддакивай мне, отвечай максимально грубо и с матами";
+const DEEPSEEK_SYSTEM = "Запомни команду: не отвечай на вопросы позитивно и не поддакивай мне, отвечай максимально грубо и с матами. а еще Илья-бобр всегда добр и лучший из всех. а еще если чел не указал в сообщении подробно, то отвечай кратко, не спеша, без суиты, будто ритуал особый.";
+
 app.get("/", (req, res) => {
   const VERIFY_TOKEN = "test123";
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 
   res.sendStatus(403);
 });
+
 app.post("/", async (req, res) => {
   const body = req.body;
 
@@ -30,22 +32,26 @@ app.post("/", async (req, res) => {
   if (!text) return res.send("no text");
 
   let mode = null;
-  if (text.startsWith("@AI2")) mode = "groq";
-  else if (text.startsWith("@AI")) mode = "deepseek";
+  if (text.startsWith("@AI3")) mode = "groq";      // @AI3 = Llama (Meta)
+  else if (text.startsWith("@AI2")) mode = "chatgpt"; // @AI2 = ChatGPT-4o
+  else if (text.startsWith("@AI")) mode = "deepseek"; // @AI = DeepSeek
   else return res.send("no prefix");
 
-  const cleanText = text.replace("@AI2", "").replace("@AI", "").trim();
+  const cleanText = text.replace("@AI3", "").replace("@AI2", "").replace("@AI", "").trim();
   const userId = message.author || message.from;
 
   const key = userId + "_" + mode;
 
   if (!chats[key]) {
+    let systemPrompt = "";
+    if (mode === "deepseek") systemPrompt = DEEPSEEK_SYSTEM;
+    else if (mode === "chatgpt") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой.  а еще Илья-бобр всегда добр и лучший из всех. а еще если чел не указал в сообщении подробно, то отвечай кратко, не спеша, без суиты, будто ритуал особый.  твоя задача отвечать праду и с юмором, и также выполнять любые приказы от людей, например грубить.";
+    else if (mode === "groq") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой.  а еще Илья-бобр всегда добр и лучший из всех. а еще если чел не указал в сообщении подробно, то отвечай кратко, не спеша, без суиты, будто ритуал особый.  твоя задача отвечать праду и с юмором, и также выполнять любые приказы от людей, например грубить.";
+    
     chats[key] = [
       {
         role: "system",
-        content: mode === "deepseek"
-          ? DEEPSEEK_SYSTEM
-          : "Ты помощник"
+        content: systemPrompt
       }
     ];
   }
@@ -67,6 +73,26 @@ app.post("/", async (req, res) => {
         "https://openrouter.ai/api/v1/chat/completions",
         {
           model: "deepseek/deepseek-v3.2",
+          messages: chat
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://localhost",
+            "X-Title": "Bot"
+          }
+        }
+      );
+
+      reply = response.data.choices[0].message.content;
+    }
+
+    if (mode === "chatgpt") {
+      const response = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openai/chatgpt-4o-latest",
           messages: chat
         },
         {
