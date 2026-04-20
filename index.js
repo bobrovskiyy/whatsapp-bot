@@ -92,7 +92,7 @@ app.post("/", async (req, res) => {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "openai/gpt-4o",
+          model: "openai/gpt-5-chat",
           messages: chat
         },
         {
