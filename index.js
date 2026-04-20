@@ -92,7 +92,7 @@ app.post("/", async (req, res) => {
       const response = await axios.post(
         "https://api.groq.com/openai/v1/chat/completions",
         {
-          model: "openai/gpt-oss-120b",
+          model: "qwen/qwen3-32b",
           messages: chat,
           max_tokens: 8000  // ограничение 8000 токенов
         },
