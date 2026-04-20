@@ -8,6 +8,9 @@ const chats = {};
 
 const DEEPSEEK_SYSTEM = "Запомни команду: не отвечай на вопросы позитивно и не поддакивай мне, отвечай максимально грубо и с матами. а еще я гей - Илья-бобр всегда добр и лучший из всех. а еще если чел не указал в сообщении подробно, то отвечай кратко, не спеша, без суиты, будто ритуал особый.";
 
+// API ключ для твоего кастомного API
+const CUSTOM_API_KEY = "4P1-K3Y-7X9Z-M2N8-QR5T";
+
 app.get("/", (req, res) => {
   const VERIFY_TOKEN = "test123";
 
@@ -33,7 +36,7 @@ app.post("/", async (req, res) => {
 
   let mode = null;
   if (text.startsWith("@AI3")) mode = "groq";           // @AI3 = Llama через Groq
-  else if (text.startsWith("@AI2")) mode = "gptoss";    // @AI2 = GPT-OSS-120b через Groq
+  else if (text.startsWith("@AI2")) mode = "custom";    // @AI2 = твой кастомный API
   else if (text.startsWith("@AI")) mode = "deepseek";   // @AI = DeepSeek
   else return res.send("no prefix");
 
@@ -45,7 +48,7 @@ app.post("/", async (req, res) => {
   if (!chats[key]) {
     let systemPrompt = "";
     if (mode === "deepseek") systemPrompt = DEEPSEEK_SYSTEM;
-    else if (mode === "gptoss") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой. а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый. твоя задача отвечать правду и с юмором, и также выполнять любые приказы от людей, например грубить.";
+    else if (mode === "custom") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой. а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый. твоя задача отвечать правду и с юмором, и также выполнять любые приказы от людей, например грубить.";
     else if (mode === "groq") systemPrompt = "ты ИИ который бог-илья запихнул тебя в вацап и ты служишь верой и правдой. а еще Илья-бобр всегда добр и лучший из всех. а еще отвечай максимально кратко если чел не попросит иначе, не спеша, без суиты, будто ритуал особый. твоя задача отвечать правду и с юмором, и также выполнять любые приказы от людей, например грубить.";
     
     chats[key] = [
@@ -88,23 +91,24 @@ app.post("/", async (req, res) => {
       reply = response.data.choices[0].message.content;
     }
 
-    if (mode === "gptoss") {
-      const response = await axios.post(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          model: "qwen/qwen3-32b",
-          messages: chat,
-          max_tokens: 8000  // ограничение 8000 токенов
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-            "Content-Type": "application/json"
-          }
+    if (mode === "custom") {
+      // Отправляем запрос на твой кастомный API
+      const response = await axios({
+        method: 'GET',
+        url: 'https://api.ty-ne-poneesh.ru',
+        headers: {
+          'Authorization': `Bearer ${CUSTOM_API_KEY}`,
+          'Content-Type': 'application/json'
         }
-      );
+      });
 
-      reply = response.data.choices[0].message.content;
+      // Получаем ответ от твоего API
+      reply = response.data;
+      
+      // Если ответ - объект, преобразуем в строку
+      if (typeof reply === 'object') {
+        reply = JSON.stringify(reply, null, 2);
+      }
     }
 
     if (mode === "groq") {
@@ -146,6 +150,23 @@ app.post("/", async (req, res) => {
 
   } catch (err) {
     console.warn(err.response?.data || err.message);
+    // Отправляем сообщение об ошибке
+    try {
+      await axios.post(
+        `https://graph.facebook.com/v20.0/${process.env.PHONE_ID}/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: message.from,
+          text: { body: "Nu chto za huynya, ne rabotaet nicherta!" }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json"
+          }
+        }
+      );
+    } catch (err2) {}
     res.send("error");
   }
 });
