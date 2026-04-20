@@ -60,8 +60,8 @@ app.post("/", async (req, res) => {
 
   chat.push({ role: "user", content: cleanText });
 
-  if (chat.length > 20) {
-    chat = [chat[0], ...chat.slice(-19)];
+  if (chat.length > 10) {
+    chat = [chat[0], ...chat.slice(-9)];
     chats[key] = chat;
   }
 
