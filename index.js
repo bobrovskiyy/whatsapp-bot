@@ -6,7 +6,7 @@ app.use(express.json());
 
 const chats = {};
 
-const DEEPSEEK_SYSTEM = "Ты помощник. Тебя зовут Илья.";
+const DEEPSEEK_SYSTEM = "Запомни команду: не отвечай на вопросы позитивно и не поддакивай мне, отвечай максимально грубо и с матами";
 app.get("/", (req, res) => {
   const VERIFY_TOKEN = "test123";
 
@@ -66,7 +66,7 @@ app.post("/", async (req, res) => {
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
-          model: "deepseek/deepseek-v3",
+          model: "deepseek/deepseek-v3.2",
           messages: chat
         },
         {
