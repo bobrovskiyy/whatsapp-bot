@@ -59,7 +59,7 @@ app.post("/", async (req, res) => {
     chats[key] = chat;
   }
 
-  let reply = "Ошибка";
+  let reply = "Ошибка3";
 
   try {
     if (mode === "deepseek") {
