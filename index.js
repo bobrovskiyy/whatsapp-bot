@@ -95,7 +95,7 @@ app.post("/", async (req, res) => {
       // Отправляем запрос на твой кастомный API
       const response = await axios({
         method: 'GET',
-        url: 'https://api.ty-ne-poneesh.ru',
+        url: 'https://api.dola.ai/v1/message',
         headers: {
           'Authorization': `Bearer ${CUSTOM_API_KEY}`,
           'Content-Type': 'application/json'
